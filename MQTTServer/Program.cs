@@ -2,15 +2,21 @@
 using MQTTnet.Server;
 
 var mqttFactory = new MqttFactory();
-var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
+var mqttServerOptions = new MqttServerOptionsBuilder()
+  .WithDefaultEndpoint()
+  .WithPersistentSessions()
+  .Build();
 
 using var mqttServer = mqttFactory.CreateMqttServer(mqttServerOptions);
 
 await mqttServer.StartAsync();
 
+mqttServer.InterceptingPublishAsync += (e) => Task.Run(() => 
+  Console.WriteLine($"InterceptingPublishAsync        - ClientId: {e.ClientId} {e.ApplicationMessage.Topic} {e.ApplicationMessage.ConvertPayloadToString()}")
+);
 
 mqttServer.ClientConnectedAsync += (e) => Task.Run(() =>
-  Console.WriteLine($"ClientConnectedAsyn             - ClientId: {e.ClientId} EndPoint {e.Endpoint} Username: {e.UserName}")
+  Console.WriteLine($"ClientConnectedAsync            - ClientId: {e.ClientId} EndPoint {e.Endpoint} Username: {e.UserName}")
 );
 
 mqttServer.ClientDisconnectedAsync += (e) => Task.Run(() =>
